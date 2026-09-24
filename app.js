@@ -1,8 +1,14 @@
-import { fall, puff, puffFrom, startDrift } from "./confetti.js";
+import { fall, puff, puffFrom, setConfettiTheme, startDrift } from "./confetti.js";
+import { petalBurst, setAmbienceTheme, startAmbience } from "./ambience.js";
+import { BUILT_IN_PIECES, builtInPiecesForKind, themeForAge } from "./media.js";
 
 const DB_NAME = "birthday-scrapbook";
 const DB_VERSION = 2;
 const SPECK_COLORS = ["#ff4f8b", "#f5c445", "#37c2dd", "#9b7ce0", "#4fc78e"];
+const THEME_SPECK_COLORS = {
+  hogwarts: ["#d4af5f", "#9b1c2a", "#f0d6a0", "#7d1523", "#ffeec2"],
+  vintage: ["#c9a877", "#a8845f", "#c08d74", "#8e6b4a", "#dcc9a3"],
+};
 const TILTS = [-1.5, 1.1, -0.7, 1.6, -1.2, 0.8, -1.8, 1.3];
 const TAPES = [
   { place: "tape-tl", tint: "232, 176, 194" },
@@ -22,6 +28,8 @@ const els = {
   heroKicker: document.getElementById("heroKicker"),
   heroHeadline: document.getElementById("heroHeadline"),
   specks: document.getElementById("specks"),
+  stampAge: document.getElementById("stampAge"),
+  seasonTabs: document.getElementById("seasonTabs"),
   pageTabs: document.getElementById("pageTabs"),
   panelTitle: document.getElementById("panelTitle"),
   panelMeta: document.getElementById("panelMeta"),
@@ -54,8 +62,16 @@ const els = {
   deletePageBtn: document.getElementById("deletePageBtn"),
 };
 
+const KIND_TABS = [
+  { kind: "photo", label: "photos", title: "The photo page", empty: "No photos yet. Add one from the bar below and it will settle onto this page." },
+  { kind: "video", label: "videos", title: "The video page", empty: "No clips yet. Add one from the bar below and it will settle onto this page." },
+  { kind: "letter", label: "letter", title: "The letter page", empty: "No letter yet. Write one from the bar below and it will settle onto this page." },
+];
+
 let db;
 let currentPageId = "";
+let currentKind = "photo";
+let seasonTheme = "";
 const objectUrls = new Set();
 
 /* ---------- storage ---------- */
@@ -165,6 +181,98 @@ async function getPieces(pageId = currentPageId) {
     .sort((a, b) => a.createdAt - b.createdAt);
 }
 
+async function getPiecesOfKind(kind, pageId = currentPageId) {
+  const pieces = await req(store("pieces").getAll());
+  return pieces
+    .filter((piece) => piece.kind === kind && piece.pageId === pageId)
+    .sort((a, b) => a.createdAt - b.createdAt);
+}
+
+async function selectKind(kind) {
+  currentKind = kind;
+  const transaction = db.transaction("meta", "readwrite");
+  transaction.objectStore("meta").put(kind, "currentKind");
+  await complete(transaction);
+}
+
+async function getHiddenBuiltInIds() {
+  return (await req(store("meta").get("hiddenBuiltIns"))) || [];
+}
+
+async function hideBuiltInPiece(id) {
+  const hidden = await getHiddenBuiltInIds();
+  if (hidden.includes(id)) return;
+  const transaction = db.transaction("meta", "readwrite");
+  transaction.objectStore("meta").put([...hidden, id], "hiddenBuiltIns");
+  await complete(transaction);
+}
+
+async function getCaptionOverrides() {
+  return (await req(store("meta").get("captionOverrides"))) || {};
+}
+
+async function saveCaptionOverride(id, caption) {
+  const overrides = await getCaptionOverrides();
+  const next = { ...overrides };
+  if (caption) next[id] = caption;
+  else delete next[id];
+  const transaction = db.transaction("meta", "readwrite");
+  transaction.objectStore("meta").put(next, "captionOverrides");
+  await complete(transaction);
+}
+
+async function resolvePiece(id) {
+  const builtIn = BUILT_IN_PIECES.find((item) => item.id === id);
+  if (builtIn) {
+    const overrides = await getCaptionOverrides();
+    return {
+      ...builtIn,
+      builtIn: true,
+      caption: overrides[id] ?? builtIn.caption ?? "",
+    };
+  }
+  return req(store("pieces").get(id));
+}
+
+async function savePieceCaption(id, caption) {
+  const piece = await resolvePiece(id);
+  if (!piece) return;
+  if (piece.builtIn) {
+    await saveCaptionOverride(id, caption);
+    return;
+  }
+  await savePiece({ ...piece, caption });
+}
+
+async function piecesForKind(kind, page) {
+  const age = page?.age;
+  const [added, hidden, overrides] = await Promise.all([
+    getPiecesOfKind(kind, page?.id),
+    getHiddenBuiltInIds(),
+    getCaptionOverrides(),
+  ]);
+  const builtIn = builtInPiecesForKind(kind, age)
+    .filter((piece) => !hidden.includes(piece.id))
+    .map((piece) => ({
+      ...piece,
+      caption: overrides[piece.id] ?? piece.caption ?? "",
+    }));
+  return [...builtIn, ...added];
+}
+
+async function countsByKind(page) {
+  const hidden = await getHiddenBuiltInIds();
+  const added = (await req(store("pieces").getAll())).filter((piece) => piece.pageId === page.id);
+  const count = (kind) =>
+    builtInPiecesForKind(kind, page.age).filter((piece) => !hidden.includes(piece.id)).length +
+    added.filter((piece) => piece.kind === kind).length;
+  return {
+    photo: count("photo"),
+    video: count("video"),
+    letter: count("letter"),
+  };
+}
+
 async function savePiece(piece) {
   const transaction = db.transaction("pieces", "readwrite");
   transaction.objectStore("pieces").put(piece);
@@ -180,7 +288,7 @@ async function deletePiece(id) {
 async function deletePage(pageId) {
   const pages = await getPages();
   if (pages.length < 2) {
-    window.alert("Keep at least one birthday page in the book.");
+    window.alert("Keep at least one season in the book.");
     return;
   }
 
@@ -188,7 +296,7 @@ async function deletePage(pageId) {
   if (!page) return;
 
   const pieces = await getPieces(pageId);
-  const label = page.age ? `the ${ordinal(page.age)} birthday page` : "this page";
+  const label = page.age ? `Season ${page.age}` : "this season";
   const extra = pieces.length
     ? ` This also removes ${pieces.length} ${pieces.length === 1 ? "keepsake" : "keepsakes"} on it.`
     : "";
@@ -231,6 +339,10 @@ function urlFor(blob) {
   const url = URL.createObjectURL(blob);
   objectUrls.add(url);
   return url;
+}
+
+function sourceFor(piece) {
+  return piece.builtIn ? piece.src : urlFor(piece.media);
 }
 
 function longDate(value) {
@@ -278,13 +390,26 @@ function ordinal(value) {
 }
 
 function defaultHeadline(age) {
-  const words = ageInWords(age);
-  return words ? `${capitalize(words)} looks good on you.` : "Here's to you, and to all of it.";
+  return age ? `Season ${age}` : "Season 27";
 }
 
 /* ---------- rendering ---------- */
 
-function renderSpecks() {
+function isReading() {
+  return document.body.classList.contains("reading");
+}
+
+/* The cover keeps its own aged look; only an opened season wears a theme. */
+function applyTheme(theme) {
+  if (document.body.dataset.theme === theme) return;
+  document.body.dataset.theme = theme;
+  setAmbienceTheme(theme);
+  setConfettiTheme(theme);
+  renderSpecks(theme);
+}
+
+function renderSpecks(theme = "") {
+  const palette = THEME_SPECK_COLORS[theme] || SPECK_COLORS;
   const specks = [
     { top: 4, left: 21, size: 7, round: true, color: 3 },
     { top: 2, left: 58, size: 9, round: false, color: 1 },
@@ -302,7 +427,7 @@ function renderSpecks() {
 
   els.specks.innerHTML = specks
     .map((speck) => {
-      const color = SPECK_COLORS[speck.color];
+      const color = palette[speck.color];
       const shape = speck.round
         ? `width:${speck.size}px;height:${speck.size}px`
         : `width:${speck.size * 0.62}px;height:${speck.size}px;border-radius:2px;transform:rotate(${speck.left % 60}deg)`;
@@ -321,7 +446,7 @@ function thumbMarkup(piece) {
     `;
   }
 
-  const url = urlFor(piece.media);
+  const url = sourceFor(piece);
   if (piece.kind === "video") {
     return `
       <div class="thumb">
@@ -355,66 +480,75 @@ function keepsakeMarkup(piece, index) {
       </button>
       ${thumbMarkup(piece)}
       <h3>${escapeHtml(piece.caption || fallbackTitle)}</h3>
-      <p class="meta">${piece.kind} &middot; ${shortDate(piece.createdAt)}</p>
+      <p class="meta">${piece.builtIn ? piece.kind : `${piece.kind} &middot; ${shortDate(piece.createdAt)}`}</p>
     </article>
   `;
 }
 
 async function render() {
   revokeUrls();
-  const [profile, pages, page, pieces] = await Promise.all([
-    getProfile(),
-    getPages(),
-    getPage(),
-    getPieces(),
-  ]);
+  const [profile, pages, page] = await Promise.all([getProfile(), getPages(), getPage()]);
 
   if (!page) return;
 
-  const kickerParts = [
-    longDate(page.date),
-    profile.name ? `for ${profile.name}` : "",
-    page.age ? `turning ${page.age}` : "",
-  ].filter(Boolean);
-  els.heroKicker.textContent = kickerParts.length
-    ? kickerParts.join(" \u00b7 ")
-    : "a scrapbook in progress";
+  const counts = await countsByKind(page);
+  const tab = KIND_TABS.find((item) => item.kind === currentKind) || KIND_TABS[0];
+  const pieces = await piecesForKind(tab.kind, page);
+
+  seasonTheme = themeForAge(page.age);
+  if (isReading()) applyTheme(seasonTheme);
+
+  els.heroKicker.textContent = "happy birthday darshan";
   els.heroHeadline.textContent = page.headline || defaultHeadline(page.age);
+  els.stampAge.textContent = page.age || "—";
   els.coverFor.textContent = profile.name ? `for ${profile.name}` : "";
-  els.panelTitle.textContent = page.age
-    ? `The ${ordinal(page.age)} birthday page`
-    : "The celebration page";
+  els.panelTitle.textContent = tab.title;
 
-  const photos = pieces.filter((piece) => piece.kind === "photo").length;
-  const videos = pieces.filter((piece) => piece.kind === "video").length;
-  const letters = pieces.filter((piece) => piece.kind === "letter").length;
   const pad = (value) => String(value).padStart(2, "0");
-  els.panelMeta.textContent = `${pad(photos)} photos \u00b7 ${pad(videos)} videos \u00b7 ${pad(letters)} letters`;
+  const countWord =
+    tab.kind === "photo" ? "photos" : tab.kind === "video" ? "videos" : pieces.length === 1 ? "letter" : "letters";
+  els.panelMeta.textContent = `${pad(pieces.length)} ${countWord}`;
 
+  els.emptyState.textContent = tab.empty;
   els.emptyState.classList.toggle("hidden", pieces.length > 0);
   els.spread.innerHTML = pieces.map(keepsakeMarkup).join("");
-  els.pageTabs.innerHTML = pages
+  els.seasonTabs.innerHTML = pages
     .map(
-      (birthdayPage) => `
+      (season) => `
         <div class="page-tab-wrap">
           <button
-            class="page-tab ${birthdayPage.id === currentPageId ? "active" : ""}"
+            class="page-tab season-tab ${season.id === currentPageId ? "active" : ""}"
             type="button"
-            data-page-id="${birthdayPage.id}"
-            ${birthdayPage.id === currentPageId ? 'aria-current="page"' : ""}
+            data-page-id="${season.id}"
+            ${season.id === currentPageId ? 'aria-current="page"' : ""}
           >
-            <strong>${escapeHtml(birthdayPage.age || "—")}</strong>
-            <span>${birthdayPage.date ? new Date(`${birthdayPage.date}T00:00:00`).getFullYear() : "birthday"}</span>
+            <strong>${escapeHtml(season.age || "—")}</strong>
+            <span>season</span>
           </button>
           ${
             pages.length > 1
-              ? `<button class="tab-delete" type="button" data-delete-page="${birthdayPage.id}" aria-label="Delete the ${escapeHtml(String(birthdayPage.age || ""))} page">×</button>`
+              ? `<button class="tab-delete" type="button" data-delete-page="${season.id}" aria-label="Delete Season ${escapeHtml(String(season.age || ""))}">×</button>`
               : ""
           }
         </div>
       `,
     )
     .join("");
+  els.pageTabs.innerHTML = KIND_TABS.map(
+    (item) => `
+      <div class="page-tab-wrap">
+        <button
+          class="page-tab ${item.kind === currentKind ? "active" : ""}"
+          type="button"
+          data-kind="${item.kind}"
+          ${item.kind === currentKind ? 'aria-current="page"' : ""}
+        >
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${pad(counts[item.kind])}</span>
+        </button>
+      </div>
+    `,
+  ).join("");
 }
 
 async function fillCoverForm() {
@@ -429,7 +563,9 @@ async function fillCoverForm() {
 
 /* ---------- interactions ---------- */
 
-function openAdd(kind) {
+async function openAdd(kind) {
+  await selectKind(kind);
+  await render();
   els.addForm.reset();
   els.formError.classList.add("hidden");
   els.kindInput.value = kind;
@@ -444,7 +580,7 @@ function openAdd(kind) {
 }
 
 async function openPiece(id) {
-  const piece = await req(store("pieces").get(id));
+  const piece = await resolvePiece(id);
   if (!piece) return;
 
   if (piece.kind === "letter") {
@@ -455,18 +591,34 @@ async function openPiece(id) {
       </article>
     `;
   } else {
-    const url = urlFor(piece.media);
+    const url = sourceFor(piece);
     const media =
       piece.kind === "video"
         ? `<video class="view-media" src="${url}" controls autoplay></video>`
         : `<img class="view-media" src="${url}" alt="${escapeHtml(piece.caption || "")}" />`;
     els.viewBody.innerHTML = `
       ${media}
-      <p class="view-caption">${escapeHtml(piece.caption || "")}</p>
+      <form class="caption-edit" data-caption-id="${piece.id}">
+        <label>
+          Title
+          <input
+            name="caption"
+            maxlength="80"
+            value="${escapeHtml(piece.caption || "")}"
+            placeholder="${piece.kind === "video" ? "Name this clip" : "Name this photo"}"
+          />
+        </label>
+        <button type="submit" class="solid">save title</button>
+      </form>
     `;
   }
 
   els.viewModal.showModal();
+  const captionInput = els.viewBody.querySelector('input[name="caption"]');
+  if (captionInput) {
+    captionInput.focus();
+    captionInput.select();
+  }
 }
 
 document.getElementById("addPhoto").addEventListener("click", () => openAdd("photo"));
@@ -494,24 +646,18 @@ els.deletePageBtn.addEventListener("click", async () => {
 
 els.heroHeadline.addEventListener("click", () => puffFrom(els.heroHeadline, 26));
 
-function showCover() {
-  els.cover.classList.remove("hidden");
-  els.book.classList.add("hidden");
-  els.dock.classList.add("hidden");
-  document.body.classList.remove("reading");
-}
-
 function openBook() {
   els.cover.classList.add("hidden");
   els.book.classList.remove("hidden");
   els.dock.classList.remove("hidden");
   document.body.classList.add("reading");
+  applyTheme(seasonTheme);
   puff(window.innerWidth / 2, window.innerHeight * 0.42, 36);
   fall(16);
+  petalBurst(14);
 }
 
 document.getElementById("openBook").addEventListener("click", openBook);
-document.getElementById("backToCover").addEventListener("click", showCover);
 
 document.getElementById("coverForm").addEventListener("submit", async (event) => {
   if (event.submitter?.value === "cancel") return;
@@ -535,7 +681,7 @@ els.newPageForm.addEventListener("submit", async (event) => {
   els.newPageError.classList.add("hidden");
 
   if (pages.some((page) => String(page.age) === age)) {
-    els.newPageError.textContent = `A page for age ${age} already exists.`;
+    els.newPageError.textContent = `A season for ${age} already exists.`;
     els.newPageError.classList.remove("hidden");
     return;
   }
@@ -549,12 +695,14 @@ els.newPageForm.addEventListener("submit", async (event) => {
   };
   await savePage(page);
   await selectPage(page.id);
+  await selectKind("photo");
   els.newPageModal.close();
   await render();
   puffFrom(els.heroHeadline, 42);
+  petalBurst(16);
 });
 
-els.pageTabs.addEventListener("click", async (event) => {
+els.seasonTabs.addEventListener("click", async (event) => {
   const remove = event.target.closest("[data-delete-page]");
   if (remove) {
     event.stopPropagation();
@@ -564,6 +712,15 @@ els.pageTabs.addEventListener("click", async (event) => {
   const tab = event.target.closest("[data-page-id]");
   if (!tab || tab.dataset.pageId === currentPageId) return;
   await selectPage(tab.dataset.pageId);
+  await render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  fall(12);
+});
+
+els.pageTabs.addEventListener("click", async (event) => {
+  const tab = event.target.closest("[data-kind]");
+  if (!tab || tab.dataset.kind === currentKind) return;
+  await selectKind(tab.dataset.kind);
   await render();
   window.scrollTo({ top: 0, behavior: "smooth" });
   fall(12);
@@ -625,13 +782,27 @@ els.addForm.addEventListener("submit", async (event) => {
         createdAt: Date.now(),
       });
     }
+    await selectKind(kind);
     els.addModal.close();
     await render();
     puff(window.innerWidth / 2, window.innerHeight * 0.62, 40);
+    petalBurst(10);
   } catch (error) {
     els.formError.textContent = error.message;
     els.formError.classList.remove("hidden");
   }
+});
+
+els.viewBody.addEventListener("submit", async (event) => {
+  const form = event.target.closest("[data-caption-id]");
+  if (!form) return;
+  event.preventDefault();
+  const id = form.dataset.captionId;
+  const caption = new FormData(form).get("caption")?.toString().trim() || "";
+  await savePieceCaption(id, caption);
+  await render();
+  els.viewModal.close();
+  puff(window.innerWidth / 2, window.innerHeight * 0.55, 28);
 });
 
 els.spread.addEventListener("click", async (event) => {
@@ -639,7 +810,12 @@ els.spread.addEventListener("click", async (event) => {
   if (remove) {
     event.stopPropagation();
     if (confirm("Remove this from the page?")) {
-      await deletePiece(remove.dataset.delete);
+      const id = remove.dataset.delete;
+      if (id.startsWith("builtin-")) {
+        await hideBuiltInPiece(id);
+      } else {
+        await deletePiece(id);
+      }
       await render();
     }
     return;
@@ -649,7 +825,7 @@ els.spread.addEventListener("click", async (event) => {
 });
 
 async function start() {
-  renderSpecks();
+  applyTheme("vintage");
   db = await openDb();
   let pages = await getPages();
   if (!pages.length) {
@@ -666,8 +842,12 @@ async function start() {
   }
   const savedPageId = await req(store("meta").get("currentPageId"));
   currentPageId = pages.some((page) => page.id === savedPageId) ? savedPageId : pages.at(-1).id;
+  const savedKind = await req(store("meta").get("currentKind"));
+  currentKind = KIND_TABS.some((tab) => tab.kind === savedKind) ? savedKind : "photo";
   await selectPage(currentPageId);
+  await selectKind(currentKind);
   await render();
+  startAmbience();
   fall(18);
   startDrift();
 }

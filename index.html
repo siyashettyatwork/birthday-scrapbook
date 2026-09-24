@@ -7,12 +7,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Cinzel:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <canvas class="ambience-canvas" id="ambience" aria-hidden="true"></canvas>
     <canvas class="confetti-canvas" id="confetti" aria-hidden="true"></canvas>
 
     <section class="cover" id="cover">
@@ -28,27 +29,67 @@
     <div class="page hidden" id="book">
       <header class="hero">
         <div class="specks" id="specks" aria-hidden="true"></div>
-        <p class="kicker" id="heroKicker">a party spread</p>
-        <h1 class="headline" id="heroHeadline"></h1>
+        <div class="hero-text">
+          <p class="kicker" id="heroKicker">happy birthday darshan</p>
+          <h1 class="headline" id="heroHeadline"></h1>
+          <p class="subhead" id="heroSubhead">
+            “You must be a Patronus charm, because you make even the darkest
+            days brighter.”
+          </p>
+        </div>
+
+        <aside class="hero-stamp" aria-hidden="true">
+          <span class="hero-stamp-age" id="stampAge"></span>
+          <span class="hero-stamp-word">season</span>
+          <span class="hero-stamp-rule"></span>
+          <span class="hero-stamp-note">pressed &amp; kept</span>
+        </aside>
       </header>
 
-      <nav class="birthday-nav" aria-label="Birthday pages">
-        <button class="cover-tab" id="backToCover" type="button">cover</button>
-        <div class="page-tabs" id="pageTabs"></div>
+      <nav class="birthday-nav" aria-label="Seasons">
+        <div class="page-tabs" id="seasonTabs"></div>
         <button class="new-page-btn" id="newPageBtn" type="button">
-          <span>+</span> new birthday page
+          <span>+</span> next season
         </button>
       </nav>
 
+      <nav class="kind-nav" aria-label="Scrapbook pages">
+        <div class="page-tabs" id="pageTabs"></div>
+      </nav>
+
       <section class="panel">
+        <span class="panel-flower panel-flower-tl" style="--spin: -18deg" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <g fill="#e79bb8">
+              <ellipse cx="24" cy="12" rx="6" ry="10" />
+              <ellipse cx="24" cy="36" rx="6" ry="10" />
+              <ellipse cx="12" cy="24" rx="10" ry="6" />
+              <ellipse cx="36" cy="24" rx="10" ry="6" />
+            </g>
+            <circle cx="24" cy="24" r="6" fill="#f0c765" />
+          </svg>
+        </span>
+
+        <span class="panel-flower panel-flower-br" style="--spin: 150deg" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <g fill="#b9a2e0">
+              <ellipse cx="24" cy="12" rx="6" ry="10" />
+              <ellipse cx="24" cy="36" rx="6" ry="10" />
+              <ellipse cx="12" cy="24" rx="10" ry="6" />
+              <ellipse cx="36" cy="24" rx="10" ry="6" />
+            </g>
+            <circle cx="24" cy="24" r="6" fill="#f2dca0" />
+          </svg>
+        </span>
+
         <div class="panel-head">
           <h2 id="panelTitle">The celebration page</h2>
           <p class="panel-meta" id="panelMeta"></p>
         </div>
 
         <p class="empty" id="emptyState">
-          Nothing pinned yet. Add a photo, a clip, or a letter from the bar
-          below and it will settle onto the page.
+          Nothing pinned yet. Add something from the bar below and it will
+          settle onto the page.
         </p>
 
         <div class="grid" id="spread"></div>
@@ -88,7 +129,7 @@
     <dialog class="modal" id="newPageModal">
       <form class="sheet" id="newPageForm" method="dialog" action="#">
         <p class="sheet-kicker">Start the next chapter</p>
-        <h3>Add a birthday page</h3>
+        <h3>Add a season</h3>
         <div class="field-row">
           <label>
             Turning
@@ -106,15 +147,15 @@
         <p class="form-error hidden" id="newPageError"></p>
         <div class="form-row">
           <button type="button" class="ghost" id="cancelNewPage">cancel</button>
-          <button type="submit" class="solid">create page</button>
+          <button type="submit" class="solid">create season</button>
         </div>
       </form>
     </dialog>
 
     <dialog class="modal" id="coverModal">
       <form method="dialog" action="#" class="sheet" id="coverForm">
-        <p class="sheet-kicker">Current birthday page</p>
-        <h3>Page details</h3>
+        <p class="sheet-kicker">Current season</p>
+        <h3>Season details</h3>
         <div class="field-row">
           <label>
             Their name
@@ -134,7 +175,7 @@
           <input name="date" id="dateInput" type="date" />
         </label>
         <div class="form-row form-row-split">
-          <button type="button" class="danger-link" id="deletePageBtn">delete this page</button>
+          <button type="button" class="danger-link hidden" id="deletePageBtn">delete this season</button>
           <div class="form-actions">
             <button value="cancel" class="ghost" type="submit">cancel</button>
             <button value="save" class="solid" type="submit">save</button>
@@ -179,6 +220,6 @@
       <div id="viewBody"></div>
     </dialog>
 
-    <script src="app.js" type="module"></script>
+    <script src="app.js?v=vintage1" type="module"></script>
   </body>
 </html>

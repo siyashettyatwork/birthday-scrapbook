@@ -1,4 +1,14 @@
-const PALETTE = ["#ff4f8b", "#f5c445", "#37c2dd", "#9b7ce0", "#4fc78e", "#ff9f6e"];
+const PALETTES = {
+  "": ["#ff4f8b", "#f5c445", "#37c2dd", "#9b7ce0", "#4fc78e", "#ff9f6e"],
+  hogwarts: ["#d4af5f", "#9b1c2a", "#f0d6a0", "#7d1523", "#ffeec2", "#b8862f"],
+  vintage: ["#c9a877", "#a8845f", "#c08d74", "#8e6b4a", "#dcc9a3", "#9c7b52"],
+};
+
+let PALETTE = PALETTES[""];
+
+export function setConfettiTheme(name = "") {
+  PALETTE = PALETTES[name] || PALETTES[""];
+}
 const GRAVITY = 0.16;
 const DRAG = 0.987;
 const TERMINAL = 4.6;
