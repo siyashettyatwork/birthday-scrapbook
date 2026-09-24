@@ -316,73 +316,6 @@ body.reading {
   min-width: 0;
 }
 
-/* A postage-stamp style marker, so the headline isn't alone on the sheet. */
-.hero-stamp {
-  position: relative;
-  flex: none;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  width: 168px;
-  padding: 26px 18px 22px;
-  background: linear-gradient(168deg, #fffdf7 0%, #fbeedd 100%);
-  border: 1px dashed rgba(120, 90, 70, 0.42);
-  border-radius: 4px;
-  box-shadow: 0 14px 34px rgba(74, 56, 40, 0.2);
-  transform: rotate(3deg);
-  animation: floatSoft 7.5s ease-in-out infinite;
-}
-
-@keyframes floatSoft {
-  0%,
-  100% {
-    transform: rotate(3deg) translateY(0);
-  }
-  50% {
-    transform: rotate(1.4deg) translateY(-10px);
-  }
-}
-
-.hero-stamp::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: var(--grain);
-  opacity: 0.06;
-  mix-blend-mode: multiply;
-  pointer-events: none;
-}
-
-.hero-stamp-age {
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 3.1rem;
-  font-weight: 600;
-  line-height: 1;
-  color: #8d3a56;
-}
-
-.hero-stamp-word {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: #a08351;
-  margin-top: 6px;
-}
-
-.hero-stamp-rule {
-  width: 52px;
-  height: 1px;
-  margin: 12px 0 10px;
-  background: rgba(180, 140, 70, 0.6);
-}
-
-.hero-stamp-note {
-  font-family: "Caveat", cursive;
-  font-size: 1.05rem;
-  color: var(--muted);
-}
-
 .specks {
   position: absolute;
   inset: -20px -40px 0;
@@ -479,12 +412,9 @@ body.reading {
 .birthday-nav {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 14px;
   margin: -8px 0 10px;
-}
-
-.birthday-nav .page-tabs {
-  margin-right: auto;
 }
 
 .kind-nav {
@@ -569,45 +499,6 @@ body.reading {
 
 .page-tab.active span {
   color: #b4536f;
-}
-
-.season-tab {
-  min-width: 64px;
-}
-
-.season-tab strong {
-  font-size: 1.25rem;
-  text-transform: none;
-}
-
-.tab-delete {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  border: 0;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--ink-soft);
-  box-shadow: 0 4px 12px rgba(42, 34, 48, 0.16);
-  font-size: 0.85rem;
-  line-height: 1;
-  cursor: pointer;
-  opacity: 0;
-  transform: scale(0.85);
-  transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease;
-}
-
-.page-tab-wrap:hover .tab-delete,
-.page-tab-wrap:focus-within .tab-delete {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.tab-delete:hover {
-  background: #d3325f;
-  color: #fff;
 }
 
 .new-page-btn {
@@ -1550,30 +1441,6 @@ body[data-theme="hogwarts"] .subhead {
   border-left-color: rgba(212, 175, 95, 0.65);
 }
 
-body[data-theme="hogwarts"] .hero-stamp {
-  background: radial-gradient(circle at 34% 28%, #a8283a 0%, #7d1523 62%, #5e0f1b 100%);
-  border: 1px solid rgba(240, 214, 150, 0.5);
-  border-radius: 50%;
-  width: 160px;
-  height: 160px;
-  align-content: center;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 2px 10px rgba(255, 220, 160, 0.28);
-}
-
-body[data-theme="hogwarts"] .hero-stamp-age {
-  font-family: "Cinzel", Georgia, serif;
-  color: #ffeec2;
-}
-
-body[data-theme="hogwarts"] .hero-stamp-word,
-body[data-theme="hogwarts"] .hero-stamp-note {
-  color: #f0d6a0;
-}
-
-body[data-theme="hogwarts"] .hero-stamp-rule {
-  background: rgba(240, 214, 150, 0.7);
-}
-
 body[data-theme="hogwarts"] .panel {
   background: linear-gradient(174deg, #f8ecd3 0%, #f1e0bf 48%, #e8d3ab 100%);
   border: 1px solid rgba(120, 82, 30, 0.5);
@@ -1647,12 +1514,6 @@ body[data-theme="hogwarts"] .panel-flower svg circle {
   display: none !important;
 }
 
-@media (max-width: 860px) {
-  .hero-stamp {
-    display: none;
-  }
-}
-
 @media (max-width: 720px) {
   .page {
     padding: 0 18px;
@@ -1660,16 +1521,6 @@ body[data-theme="hogwarts"] .panel-flower svg circle {
 
   .hero {
     padding: 28px 0 32px;
-  }
-
-  .birthday-nav {
-    flex-wrap: wrap;
-  }
-
-  .birthday-nav .page-tabs {
-    margin-right: 0;
-    order: 3;
-    width: 100%;
   }
 
   .panel-head {
@@ -1712,7 +1563,6 @@ body[data-theme="hogwarts"] .panel-flower svg circle {
   .cover-kicker::after,
   .cover-title,
   .cover-open,
-  .hero-stamp,
   .panel-flower,
   .headline::after {
     animation: none;

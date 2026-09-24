@@ -28,8 +28,6 @@ const els = {
   heroKicker: document.getElementById("heroKicker"),
   heroHeadline: document.getElementById("heroHeadline"),
   specks: document.getElementById("specks"),
-  stampAge: document.getElementById("stampAge"),
-  seasonTabs: document.getElementById("seasonTabs"),
   pageTabs: document.getElementById("pageTabs"),
   panelTitle: document.getElementById("panelTitle"),
   panelMeta: document.getElementById("panelMeta"),
@@ -500,7 +498,6 @@ async function render() {
 
   els.heroKicker.textContent = "happy birthday darshan";
   els.heroHeadline.textContent = page.headline || defaultHeadline(page.age);
-  els.stampAge.textContent = page.age || "—";
   els.coverFor.textContent = profile.name ? `for ${profile.name}` : "";
   els.panelTitle.textContent = tab.title;
 
@@ -512,28 +509,6 @@ async function render() {
   els.emptyState.textContent = tab.empty;
   els.emptyState.classList.toggle("hidden", pieces.length > 0);
   els.spread.innerHTML = pieces.map(keepsakeMarkup).join("");
-  els.seasonTabs.innerHTML = pages
-    .map(
-      (season) => `
-        <div class="page-tab-wrap">
-          <button
-            class="page-tab season-tab ${season.id === currentPageId ? "active" : ""}"
-            type="button"
-            data-page-id="${season.id}"
-            ${season.id === currentPageId ? 'aria-current="page"' : ""}
-          >
-            <strong>${escapeHtml(season.age || "—")}</strong>
-            <span>season</span>
-          </button>
-          ${
-            pages.length > 1
-              ? `<button class="tab-delete" type="button" data-delete-page="${season.id}" aria-label="Delete Season ${escapeHtml(String(season.age || ""))}">×</button>`
-              : ""
-          }
-        </div>
-      `,
-    )
-    .join("");
   els.pageTabs.innerHTML = KIND_TABS.map(
     (item) => `
       <div class="page-tab-wrap">
@@ -700,21 +675,6 @@ els.newPageForm.addEventListener("submit", async (event) => {
   await render();
   puffFrom(els.heroHeadline, 42);
   petalBurst(16);
-});
-
-els.seasonTabs.addEventListener("click", async (event) => {
-  const remove = event.target.closest("[data-delete-page]");
-  if (remove) {
-    event.stopPropagation();
-    await deletePage(remove.dataset.deletePage);
-    return;
-  }
-  const tab = event.target.closest("[data-page-id]");
-  if (!tab || tab.dataset.pageId === currentPageId) return;
-  await selectPage(tab.dataset.pageId);
-  await render();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  fall(12);
 });
 
 els.pageTabs.addEventListener("click", async (event) => {
