@@ -30,13 +30,13 @@ Dil Hai Nadaan Kaise Ab Kahein?
 `.trim();
 
 export const BUILT_IN_PIECES = [
-  { id: "builtin-27-photo-1", age: "27", kind: "photo", caption: "", src: "photos-27/photo-1.jpg" },
-  { id: "builtin-27-photo-2", age: "27", kind: "photo", caption: "", src: "photos-27/photo-2.jpg" },
-  { id: "builtin-27-photo-3", age: "27", kind: "photo", caption: "", src: "photos-27/photo-3.jpg" },
-  { id: "builtin-27-clip-1", age: "27", kind: "video", caption: "", src: "videos-27/clip-1.mp4" },
-  { id: "builtin-27-clip-2", age: "27", kind: "video", caption: "", src: "videos-27/clip-2.mp4" },
-  { id: "builtin-27-clip-3", age: "27", kind: "video", caption: "", src: "videos-27/clip-3.mp4" },
-  { id: "builtin-27-clip-4", age: "27", kind: "video", caption: "", src: "videos-27/clip-4.mp4" },
+  { id: "builtin-27-photo-1", age: "27", kind: "photo", caption: "joru ka gulaam", src: "photos-27/photo-1.jpg" },
+  { id: "builtin-27-photo-2", age: "27", kind: "photo", caption: "pookie cookie", src: "photos-27/photo-2.jpg" },
+  { id: "builtin-27-photo-3", age: "27", kind: "photo", caption: "firefly", src: "photos-27/photo-3.jpg" },
+  { id: "builtin-27-clip-1", age: "27", kind: "video", caption: "mental of the year", src: "videos-27/clip-1.mp4" },
+  { id: "builtin-27-clip-2", age: "27", kind: "video", caption: "actor(over) of the year", src: "videos-27/clip-2.mp4" },
+  { id: "builtin-27-clip-3", age: "27", kind: "video", caption: "facecard of the year", src: "videos-27/clip-3.mp4" },
+  { id: "builtin-27-clip-4", age: "27", kind: "video", caption: "cutie of the year", src: "videos-27/clip-4.mp4" },
   {
     id: "builtin-27-letter-1",
     age: "27",
