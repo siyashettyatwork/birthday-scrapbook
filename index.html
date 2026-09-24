@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digital Diary</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas class="confetti-canvas" id="confetti" aria-hidden="true"></canvas>
+
+    <section class="cover" id="cover">
+      <div class="cover-specks" id="coverSpecks" aria-hidden="true"></div>
+      <div class="cover-book">
+        <p class="cover-kicker">a keepsake book</p>
+        <h1 class="cover-title">digital diary</h1>
+        <p class="cover-for" id="coverFor"></p>
+        <button class="cover-open" id="openBook" type="button">open</button>
+      </div>
+    </section>
+
+    <div class="page hidden" id="book">
+      <header class="hero">
+        <div class="specks" id="specks" aria-hidden="true"></div>
+        <p class="kicker" id="heroKicker">a party spread</p>
+        <h1 class="headline" id="heroHeadline"></h1>
+      </header>
+
+      <nav class="birthday-nav" aria-label="Birthday pages">
+        <button class="cover-tab" id="backToCover" type="button">cover</button>
+        <div class="page-tabs" id="pageTabs"></div>
+        <button class="new-page-btn" id="newPageBtn" type="button">
+          <span>+</span> new birthday page
+        </button>
+      </nav>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 id="panelTitle">The celebration page</h2>
+          <p class="panel-meta" id="panelMeta"></p>
+        </div>
+
+        <p class="empty" id="emptyState">
+          Nothing pinned yet. Add a photo, a clip, or a letter from the bar
+          below and it will settle onto the page.
+        </p>
+
+        <div class="grid" id="spread"></div>
+      </section>
+    </div>
+
+    <nav class="dock hidden" id="dock" aria-label="Add to the scrapbook">
+      <button class="dock-btn" id="addPhoto" type="button" data-label="Photo" aria-label="Add a photo">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="3.5" />
+          <circle cx="8.6" cy="9.6" r="1.6" />
+          <path d="M3.6 17.5 9 12.4l4 3.6 3.2-2.6 4.2 3.6" />
+        </svg>
+      </button>
+      <button class="dock-btn" id="addVideo" type="button" data-label="Video" aria-label="Add a video">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="2.5" y="6" width="13" height="12" rx="3" />
+          <path d="M15.5 10.4 21 7.5v9l-5.5-2.9z" />
+        </svg>
+      </button>
+      <button class="dock-btn" id="addLetter" type="button" data-label="Letter" aria-label="Write a letter">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4.5 19.5h3.2L19.3 7.9a2.2 2.2 0 0 0-3.2-3.2L4.5 16.3z" />
+          <path d="M14.6 6.2l3.2 3.2" />
+        </svg>
+      </button>
+      <span class="dock-divider" aria-hidden="true"></span>
+      <button class="dock-btn" id="editCoverBtn" type="button" data-label="Details" aria-label="Edit page details">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 8h8M16.5 8H20M4 16h3.5M12 16h8" />
+          <circle cx="14.2" cy="8" r="2.3" />
+          <circle cx="9.8" cy="16" r="2.3" />
+        </svg>
+      </button>
+    </nav>
+
+    <dialog class="modal" id="newPageModal">
+      <form class="sheet" id="newPageForm" method="dialog" action="#">
+        <p class="sheet-kicker">Start the next chapter</p>
+        <h3>Add a birthday page</h3>
+        <div class="field-row">
+          <label>
+            Turning
+            <input name="newAge" id="newAgeInput" type="number" min="1" max="120" required />
+          </label>
+          <label>
+            Birthday date
+            <input name="newDate" id="newDateInput" type="date" />
+          </label>
+        </div>
+        <label>
+          Headline <span class="optional">(optional)</span>
+          <input name="newHeadline" id="newHeadlineInput" maxlength="90" />
+        </label>
+        <p class="form-error hidden" id="newPageError"></p>
+        <div class="form-row">
+          <button type="button" class="ghost" id="cancelNewPage">cancel</button>
+          <button type="submit" class="solid">create page</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="coverModal">
+      <form method="dialog" action="#" class="sheet" id="coverForm">
+        <p class="sheet-kicker">Current birthday page</p>
+        <h3>Page details</h3>
+        <div class="field-row">
+          <label>
+            Their name
+            <input name="name" id="nameInput" maxlength="40" required />
+          </label>
+          <label>
+            Turning
+            <input name="age" id="ageInput" type="number" min="1" max="120" />
+          </label>
+        </div>
+        <label>
+          Headline
+          <input name="headline" id="headlineInput" maxlength="90" />
+        </label>
+        <label>
+          Date
+          <input name="date" id="dateInput" type="date" />
+        </label>
+        <div class="form-row form-row-split">
+          <button type="button" class="danger-link" id="deletePageBtn">delete this page</button>
+          <div class="form-actions">
+            <button value="cancel" class="ghost" type="submit">cancel</button>
+            <button value="save" class="solid" type="submit">save</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="addModal">
+      <form class="sheet" id="addForm" method="dialog" action="#">
+        <h3 id="addTitle">Add something</h3>
+        <input type="hidden" name="kind" id="kindInput" />
+        <label>
+          Title
+          <input name="caption" id="captionInput" maxlength="80" placeholder="Golden Hour" />
+        </label>
+        <label id="mediaLabel" class="drop">
+          <span id="dropHint">Drop a file here, or click to choose</span>
+          <input name="media" id="mediaInput" type="file" hidden />
+        </label>
+        <label id="letterLabel" class="hidden">
+          Letter
+          <textarea
+            name="letter"
+            id="letterInput"
+            rows="8"
+            placeholder="My dearest,"
+          ></textarea>
+        </label>
+        <p class="form-error hidden" id="formError"></p>
+        <div class="form-row">
+          <button type="button" class="ghost" id="cancelAdd">cancel</button>
+          <button type="submit" class="solid">add to the page</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal wide" id="viewModal">
+      <button class="close-x" id="closeView" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" /></svg>
+      </button>
+      <div id="viewBody"></div>
+    </dialog>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
