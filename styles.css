@@ -13,7 +13,6 @@
   --shadow-card: 0 1px 2px rgba(74, 56, 40, 0.07), 0 14px 30px rgba(74, 56, 40, 0.14);
   --shadow-hover: 0 3px 8px rgba(74, 56, 40, 0.1), 0 30px 58px rgba(74, 56, 40, 0.24);
   --shadow-panel: 0 3px 10px rgba(58, 40, 30, 0.07), 0 40px 90px rgba(58, 40, 30, 0.18);
-  --shadow-dock: 0 3px 10px rgba(42, 34, 48, 0.1), 0 18px 44px rgba(42, 34, 48, 0.26);
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
@@ -63,7 +62,7 @@ body::after {
 }
 
 body.reading {
-  padding-bottom: 120px;
+  padding-bottom: 48px;
 }
 
 .confetti-canvas {
@@ -882,86 +881,6 @@ body.reading {
   transform: scale(1);
 }
 
-/* ---------- dock ---------- */
-
-.dock {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 8px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(58, 42, 52, 0.95) 0%, rgba(40, 28, 36, 0.95) 100%);
-  backdrop-filter: blur(26px) saturate(180%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  border: 1px solid rgba(255, 245, 235, 0.16);
-  box-shadow: var(--shadow-dock);
-  z-index: 40;
-}
-
-.dock-btn {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: rgba(255, 243, 232, 0.72);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.dock-btn svg {
-  width: 21px;
-  height: 21px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.dock-btn:hover {
-  background: rgba(255, 245, 235, 0.14);
-  color: #fff8f1;
-}
-
-.dock-btn::after {
-  content: attr(data-label);
-  position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  padding: 5px 10px;
-  border-radius: 8px;
-  background: var(--ink);
-  color: #fff;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.dock-btn:hover::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.dock-divider {
-  width: 1px;
-  height: 24px;
-  margin: 0 6px;
-  background: rgba(255, 245, 235, 0.2);
-}
-
 /* ---------- dialogs ---------- */
 
 .modal {
@@ -1485,20 +1404,6 @@ body[data-theme="hogwarts"] .keepsake h3 {
 
 body[data-theme="hogwarts"] .keepsake .meta {
   color: #9b8258;
-}
-
-body[data-theme="hogwarts"] .dock {
-  background: linear-gradient(180deg, rgba(62, 24, 28, 0.96) 0%, rgba(38, 14, 18, 0.96) 100%);
-  border-color: rgba(212, 175, 95, 0.4);
-}
-
-body[data-theme="hogwarts"] .dock-btn {
-  color: rgba(246, 226, 178, 0.78);
-}
-
-body[data-theme="hogwarts"] .dock-btn:hover {
-  background: rgba(212, 175, 95, 0.18);
-  color: #fff3d6;
 }
 
 /* House crest ribbon across the panel corners. */

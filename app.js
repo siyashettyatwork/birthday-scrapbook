@@ -24,7 +24,6 @@ const els = {
   coverFor: document.getElementById("coverFor"),
   coverSpecks: document.getElementById("coverSpecks"),
   book: document.getElementById("book"),
-  dock: document.getElementById("dock"),
   heroKicker: document.getElementById("heroKicker"),
   heroHeadline: document.getElementById("heroHeadline"),
   specks: document.getElementById("specks"),
@@ -596,13 +595,6 @@ async function openPiece(id) {
   }
 }
 
-document.getElementById("addPhoto").addEventListener("click", () => openAdd("photo"));
-document.getElementById("addVideo").addEventListener("click", () => openAdd("video"));
-document.getElementById("addLetter").addEventListener("click", () => openAdd("letter"));
-document.getElementById("editCoverBtn").addEventListener("click", async () => {
-  await fillCoverForm();
-  els.coverModal.showModal();
-});
 document.getElementById("newPageBtn").addEventListener("click", async () => {
   const pages = await getPages();
   const highestAge = Math.max(0, ...pages.map((page) => Number(page.age) || 0));
@@ -624,7 +616,6 @@ els.heroHeadline.addEventListener("click", () => puffFrom(els.heroHeadline, 26))
 function openBook() {
   els.cover.classList.add("hidden");
   els.book.classList.remove("hidden");
-  els.dock.classList.remove("hidden");
   document.body.classList.add("reading");
   applyTheme(seasonTheme);
   puff(window.innerWidth / 2, window.innerHeight * 0.42, 36);
